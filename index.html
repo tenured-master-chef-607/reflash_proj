@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Analysis</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center">Financial Analysis Dashboard</h1>
+        
+        <form method="POST" class="mt-4">
+            <div class="mb-3">
+                <label for="target_date" class="form-label">Select Target Date:</label>
+                <input type="date" id="target_date" name="target_date" class="form-control" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="model_selection" class="form-label">Choose Model:</label>
+                <select id="model_selection" name="model_selection" class="form-select" required>
+                    <option value="GPT 4o">GPT 4o</option>
+                    <option value="deepseek-r1">DeepSeek R1</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Generate Analysis</button>
+        </form>
+        
+        {% if summary %}
+        <div class="mt-5">
+            <h2>Generated Financial Report</h2>
+            <pre class="p-3 border bg-light">{{ summary }}</pre>
+        </div>
+        {% endif %}
+        
+        {% if stats %}
+        <div class="mt-4">
+            <h2>Financial Summary</h2>
+            <pre class="p-3 border bg-light">{{ stats }}</pre>
+        </div>
+        {% endif %}
+        
+        {% if plot_url %}
+        <div class="mt-4 text-center">
+            <h2>Financial Briefing Plot</h2>
+            <img src="{{ plot_url }}" class="img-fluid" alt="Financial Plot">
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
