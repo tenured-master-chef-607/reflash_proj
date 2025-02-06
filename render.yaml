@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: financial-analysis-tool
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: SUPABASE_URL
+        fromFile: .env
+      - key: SUPABASE_KEY
+        fromFile: .env
+    plan: free

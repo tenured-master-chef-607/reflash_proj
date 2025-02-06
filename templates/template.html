@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Analysis Tool</title>
+    <link rel="stylesheet" href="./static/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Financial Analysis Tool</h1>
+    </header>
+    <main>
+        <form method="POST" class="form-container">
+            <label for="target_date">Enter Target Date (YYYY-MM-DD):</label>
+            <input type="date" id="target_date" name="target_date" required>
+            
+            <label for="model_selection">Select Model:</label>
+            <select id="model_selection" name="model_selection">
+                <option value="GPT 4o">GPT 4o</option>
+                <option value="deepseek-r1">deepseek-r1</option>
+            </select>
+            
+            <button type="submit">Get Financial Summary</button>
+        </form>
+        
+        <div class="container">
+            <div class="column">
+                <h2>Financial Stats & Ratios</h2>
+                {% if stats %}
+                    <div id="financial-stats"></div>
+                    <script>
+                        const statsMarkdown = `{{ stats|e }}`; 
+                        document.getElementById('financial-stats').innerHTML = marked.parse(statsMarkdown);
+                    </script>
+                {% else %}
+                    <p>No data available. Please enter a date to view details.</p>
+                {% endif %}
+            </div>
+            
+            <div class="column plot">
+                <h2>Plot</h2>
+                {% if plot_url %}
+                    <img src="{{ plot_url }}" alt="Financial Plot">
+                {% else %}
+                    <p>No plot available. Please generate a report.</p>
+                {% endif %}
+            </div>
+            
+            <div class="column">
+                <h2>LLM Analysis</h2>
+                {% if summary %}
+                    <div id="llm-analysis"></div>
+                    <script>
+                        const markdownContent = `{{ summary|e }}`; 
+                        document.getElementById('llm-analysis').innerHTML = marked.parse(markdownContent);
+                    </script>
+                {% else %}
+                    <p>No analysis available. Please enter a date to generate a report.</p>
+                {% endif %}
+            </div>        
+        </div>
+    </main>
+</body>
+</html>
