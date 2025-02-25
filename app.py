@@ -25,6 +25,8 @@ def home():
             stats = json.dumps(summary_data, indent=4)
             stats = generate_markdown(summary_data)
 
+            
+            
             prompt = f"""Financial data and calculated ratios:{summary_data}. Using the provided balance sheet data for the specified date, {target_date}, generate a concise financial analysis report evaluating the company's financial health. The report should be structured into the following six sections: 
             1. Financial Summary: Provide an overview of the key financial figures, including total assets, liabilities, equity, and net income, highlighting any significant observations.
             2. Breakdown of Financial Components: Analyze and describe the composition of assets, liabilities, and equity, noting any dominant or missing components.
@@ -34,8 +36,6 @@ def home():
             6. Recommendations: Provide practical recommendations for improving financial performance, mitigating risks, or leveraging opportunities.
             Ensure that the analysis is clear, precise, and easy to understand, using the data provided to support conclusions where applicable."""
             
-            
-            
 
             if model_selection == "GPT 4o":
                 gpt_agent = importlib.import_module("agents.gpt_agent")
@@ -43,6 +43,7 @@ def home():
             elif model_selection == "deepseek-r1":
                 deepseek_agent = importlib.import_module("agents.deepseek_agent")
                 summary = deepseek_agent.call_deepseek_agent(prompt)
+
 
         plot = plot_financial_briefing(balance_sheets)
 

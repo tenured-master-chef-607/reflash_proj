@@ -12,6 +12,7 @@ def fetch_data_from_js():
             text=True,
             check=True
         )
+        print("here")
         return json.loads(result.stdout)
     except subprocess.CalledProcessError as e:
         print(f"Error running Node.js script: {e.stderr}")

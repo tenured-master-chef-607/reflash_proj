@@ -14,7 +14,7 @@ const fetchData = async () => {
   
       const result = { accounting_accounts: accountsData, accounting_balance_sheets: balanceSheetsData };
   
-      console.log(JSON.stringify(result));
+      //console.log(JSON.stringify(result));
       return result;
     } catch (error) {
       console.error('Error fetching data:', error.message);
