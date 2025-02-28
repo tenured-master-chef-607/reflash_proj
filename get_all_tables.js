@@ -1,8 +1,7 @@
-//returns list of names of all tables under the database
 
 import { supabase } from './supabaseClient.js';
 
-const getAllTables = async () => {
+const tableNames = async () => {
   try {
     const { data, error } = await supabase.rpc('get_table_names');
 
@@ -21,4 +20,6 @@ const getAllTables = async () => {
   }
 };
 
-getAllTables();
+export { tableNames };
+
+tableNames();
