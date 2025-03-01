@@ -22,6 +22,7 @@ def home():
 
         if target_date and balance_sheets:
             summary_data = financial_summary(balance_sheets, target_date)
+            print(summary_data)
             stats = json.dumps(summary_data, indent=4)
             stats = generate_markdown(summary_data)
 

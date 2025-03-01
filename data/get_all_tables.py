@@ -5,7 +5,7 @@ import os
 def get_all_tables():
     try:
         result = subprocess.run(
-            ['node', 'tableNames.js'],
+            ['node', 'get_all_tables.js'],
             capture_output=True,
             text=True,
             check=True
