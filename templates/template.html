@@ -279,7 +279,7 @@
             
             <div class="column plot">
                 <h2>Financial Charts</h2>
-                {% if balance_sheets %}
+                {% if balance_sheets and target_date %}
                     <div class="financial-charts">
                         <div class="chart-carousel">
                             <div class="carousel-navigation">
@@ -330,7 +330,7 @@
                     </script>
                     <script src="{{ url_for('static', filename='js/financial-charts.js') }}"></script>
                 {% else %}
-                    <p>No charts available. Please generate a report.</p>
+                    <p>No charts available. Please select a date and generate a report.</p>
                 {% endif %}
             </div>
             
