@@ -46,14 +46,16 @@ def get_balance_sheets():
         
     return balance_sheets
 
-def get_plot(balance_sheets):
-    return plot_financial_briefing(balance_sheets)
+# Function removed/commented out
+# def get_plot(balance_sheets):
+#     return plot_financial_briefing(balance_sheets)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     summary = None
     stats = None
     target_date = None
+    # We'll no longer generate a backend plot
     plot = None
     
     # Get balance sheets
@@ -72,8 +74,8 @@ def home():
             # Generate markdown for display
             stats = generate_markdown(summary_data)
             
-            # Only generate the plot when a POST request is made
-            plot = get_plot(balance_sheets)
+            # Plot generation removed
+            # plot = get_plot(balance_sheets)
             
             prompt = f"""Financial data and calculated ratios:{summary_data}. Using the provided balance sheet data for the specified date, {target_date}, generate a concise financial analysis report evaluating the company's financial health. The report should be structured into the following six sections: 
             1. Financial Summary: Provide an overview of the key financial figures, including total assets, liabilities, equity, and net income, highlighting any significant observations.
@@ -87,13 +89,12 @@ def home():
             gpt_agent = importlib.import_module("agents.gpt_agent")
             # summary = gpt_agent.call_gpt_agent(prompt)
             summary = "temp summary"
-            
     
     return render_template('template.html', 
                           summary=summary, 
                           stats=stats, 
                           target_date=target_date, 
-                          plot_url=plot, 
+                          plot_url=None,  # Always passing None for plot_url
                           balance_sheets=balance_sheets, 
                           available_dates=available_dates)
 

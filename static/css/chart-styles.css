@@ -1,0 +1,114 @@
+.financial-charts {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.financial-charts canvas {
+    width: 100%;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 10px;
+}
+
+/* Carousel styling */
+.chart-carousel {
+    width: 100%;
+    position: relative;
+}
+
+.carousel-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.carousel-title {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.carousel-btn {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background-color 0.3s;
+}
+
+.carousel-btn:hover {
+    background-color: #e9ecef;
+}
+
+.carousel-container {
+    position: relative;
+    overflow: hidden;
+    height: 350px;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.carousel-slide {
+    display: none;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+}
+
+.carousel-slide.active {
+    display: block;
+}
+
+.carousel-slide canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background-color: #ced4da;
+    border-radius: 50%;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.dot.active {
+    background-color: #0d6efd;
+}
+
+@media (max-width: 768px) {
+    .carousel-container {
+        height: 300px;
+    }
+}
+
+.ratio-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+@media (max-width: 768px) {
+    .ratio-charts {
+        grid-template-columns: 1fr;
+    }
+} 

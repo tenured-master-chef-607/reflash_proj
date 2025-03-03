@@ -5,13 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Analysis Tool</title>
     <link rel="stylesheet" href="./static/css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chart-styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
+        /* General responsive styling */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .main-content {
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Form styling */
+        .form-container {
+            margin-bottom: 2rem;
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .submit-btn {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #0b5ed7;
+        }
+        
+        /* Container and column layout with improved responsiveness */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .column {
+            flex: 1 1 30%;
+            min-width: 300px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Adjustments for different screen sizes */
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            /* On mid-width screens, reorder columns to show charts first */
+            .column.plot {
+                order: -1; /* Puts charts above other content */
+                width: 100%;
+            }
+            
+            .column {
+                width: 100%;
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .date-selector-container {
+                min-width: 100%; /* Full width on mobile */
+                max-width: 100%;
+            }
+            
+            .form-container {
+                padding: 1rem;
+            }
+            
+            .submit-btn {
+                width: 100%;
+                margin-top: 1rem;
+            }
+            
+            /* Maintain chart-first ordering on mobile */
+            .column.plot {
+                order: -1;
+            }
+            
+            /* Make carousel buttons larger on mobile for touchscreens */
+            .carousel-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+            
+            /* Increase dot size on mobile for easier tapping */
+            .dot {
+                width: 14px;
+                height: 14px;
+                margin: 0 8px;
+            }
+        }
+        
         /* Custom dropdown styling */
         .custom-dropdown {
             position: relative;
             display: inline-block;
             width: 100%;
+            min-width: 200px; /* Minimum width for dropdown */
+        }
+        
+        .date-selector-container {
+            min-width: 250px; /* Ensures date picker has sufficient width */
+            max-width: 300px; /* Maximum width on larger screens */
         }
         
         .dropdown-header {
@@ -25,9 +159,16 @@
             align-items: center;
         }
         
-        .dropdown-header:after {
-            content: "▼";
-            font-size: 12px;
+        @media (max-width: 768px) {
+            .dropdown-header {
+                padding: 1rem;
+                font-size: 16px; /* Ensure readable text on mobile */
+            }
+            
+            .dropdown-option {
+                padding: 1rem;
+                font-size: 16px;
+            }
         }
         
         .dropdown-options {
@@ -97,37 +238,30 @@
     <header>
         <h1>Financial Analysis Tool</h1>
     </header>
-    <main>
-        <form method="POST" class="form-container">
-            <div class="mb-3">
-                <label for="visible-dropdown">Select Report Date:</label>
-                <div class="custom-dropdown">
-                    <div id="dropdown-header" class="dropdown-header">-- Select a report date --</div>
-                    <div class="dropdown-options" id="dropdown-options">
-                        {% if available_dates %}
+    
+    <div class="main-content">
+        <div class="form-container">
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label" for="target_date">Select Date:</label>
+                    <div class="custom-dropdown">
+                        <div class="dropdown-header">Select a date</div>
+                        <div class="dropdown-options">
                             {% for date in available_dates %}
-                                <div class="dropdown-option" data-value="{{ date }}">
-                                    <span class="date-display" data-date="{{ date }}">{{ date.split('T')[0] }}</span>
-                                </div>
+                                <div class="dropdown-option" data-value="{{ date }}">{{ date }}</div>
                             {% endfor %}
-                        {% endif %}
+                        </div>
+                        <select name="target_date" id="target_date" style="display: none;">
+                            <option value="">Select a date</option>
+                            {% for date in available_dates %}
+                                <option value="{{ date }}" {% if date == target_date %}selected{% endif %}>{{ date }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
-                <!-- Hidden actual select that will be updated and submitted with the form -->
-                <select id="target_date" name="target_date" class="hidden-select" required>
-                    <option value="">-- Select a report date --</option>
-                    {% if available_dates %}
-                        {% for date in available_dates %}
-                            <option value="{{ date }}" {% if target_date == date %}selected{% endif %}>
-                                {{ date.split('T')[0] }}
-                            </option>
-                        {% endfor %}
-                    {% endif %}
-                </select>
-            </div>
-            
-            <button type="submit">Get Financial Summary</button>
-        </form>
+                <button type="submit" class="submit-btn">Generate Report</button>
+            </form>
+        </div>
         
         <div class="container">
             <div class="column">
@@ -144,11 +278,59 @@
             </div>
             
             <div class="column plot">
-                <h2>Plot</h2>
-                {% if plot_url %}
-                    <img src="{{ plot_url }}" alt="Financial Plot">
+                <h2>Financial Charts</h2>
+                {% if balance_sheets %}
+                    <div class="financial-charts">
+                        <div class="chart-carousel">
+                            <div class="carousel-navigation">
+                                <button id="prevChart" class="carousel-btn">&#10094;</button>
+                                <div id="chartTitle" class="carousel-title">Major Financial Statistics</div>
+                                <button id="nextChart" class="carousel-btn">&#10095;</button>
+                            </div>
+                            
+                            <div class="carousel-container">
+                                <div class="carousel-slide active" data-title="Major Financial Statistics">
+                                    <canvas id="majorFinancialStats" height="300"></canvas>
+                                </div>
+                                <div class="carousel-slide" data-title="Current Ratio">
+                                    <canvas id="currentRatio" height="300"></canvas>
+                                </div>
+                                <div class="carousel-slide" data-title="Debt to Equity Ratio">
+                                    <canvas id="debtToEquityRatio" height="300"></canvas>
+                                </div>
+                                <div class="carousel-slide" data-title="Return on Equity">
+                                    <canvas id="returnOnEquity" height="300"></canvas>
+                                </div>
+                                <div class="carousel-slide" data-title="Equity Multiplier">
+                                    <canvas id="equityMultiplier" height="300"></canvas>
+                                </div>
+                                <div class="carousel-slide" data-title="Debt Ratio">
+                                    <canvas id="debtRatio" height="300"></canvas>
+                                </div>
+                                <div class="carousel-slide" data-title="Net Profit Margin">
+                                    <canvas id="netProfitMargin" height="300"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="carousel-dots">
+                                <span class="dot active" data-index="0"></span>
+                                <span class="dot" data-index="1"></span>
+                                <span class="dot" data-index="2"></span>
+                                <span class="dot" data-index="3"></span>
+                                <span class="dot" data-index="4"></span>
+                                <span class="dot" data-index="5"></span>
+                                <span class="dot" data-index="6"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        // Financial data passed from Flask
+                        const financialData = {{ balance_sheets|tojson }};
+                    </script>
+                    <script src="{{ url_for('static', filename='js/financial-charts.js') }}"></script>
                 {% else %}
-                    <p>No plot available. Please generate a report.</p>
+                    <p>No charts available. Please generate a report.</p>
                 {% endif %}
             </div>
             
@@ -165,37 +347,37 @@
                 {% endif %}
             </div>        
         </div>
-    </main>
-
+    </div>
+    
     <script>
+        // Custom dropdown script (with minor modifications)
         document.addEventListener('DOMContentLoaded', function() {
-            const dropdownHeader = document.getElementById('dropdown-header');
-            const dropdownOptions = document.getElementById('dropdown-options');
-            const dropdownContainer = dropdownHeader.parentElement;
+            const dropdownContainer = document.querySelector('.custom-dropdown');
+            const dropdownHeader = document.querySelector('.dropdown-header');
+            const dropdownOptions = document.querySelector('.dropdown-options');
             const hiddenSelect = document.getElementById('target_date');
             
-            // Set up the dropdown toggle
+            // Toggle dropdown
             dropdownHeader.addEventListener('click', function() {
                 dropdownContainer.classList.toggle('dropdown-open');
+                dropdownOptions.style.display = dropdownOptions.style.display === 'block' ? 'none' : 'block';
             });
             
-            // Close dropdown when clicking elsewhere
+            // Close dropdown when clicking outside
             document.addEventListener('click', function(event) {
                 if (!dropdownContainer.contains(event.target)) {
                     dropdownContainer.classList.remove('dropdown-open');
+                    dropdownOptions.style.display = 'none';
                 }
             });
             
-            // Format the date options
-            const dateOptions = document.querySelectorAll('.date-display');
-            const currentYear = new Date().getFullYear();
-            
+            // Format date options for better readability
+            const dateOptions = document.querySelectorAll('.dropdown-option');
             dateOptions.forEach(dateOption => {
-                const dateValue = dateOption.getAttribute('data-date');
-                const date = new Date(dateValue);
+                const dateStr = dateOption.getAttribute('data-value');
+                const date = new Date(dateStr);
                 const year = date.getFullYear();
-                
-                // Format the month and day portion only
+                const currentYear = new Date().getFullYear();
                 const month = date.toLocaleString('en-US', { month: 'short' });
                 const day = date.getDate();
                 const formattedDate = `${month} ${day}`;
@@ -231,6 +413,7 @@
                     
                     // Close the dropdown
                     dropdownContainer.classList.remove('dropdown-open');
+                    dropdownOptions.style.display = 'none';
                     
                     // Trigger change event on the select
                     const event = new Event('change', { bubbles: true });
