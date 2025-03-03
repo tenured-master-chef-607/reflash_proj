@@ -1,62 +1,67 @@
-import subprocess
-import json
 import os
+from supabase import create_client
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_all_tables():
+    """
+    Get all table names from Supabase using the Python client.
+    Replaces the Node.js subprocess approach.
+    """
     try:
-        result = subprocess.run(
-            ['node', 'get_all_tables.js'],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-
-        raw_output = result.stdout.strip()
-        data = json.loads(raw_output)
-
-        if not isinstance(data, list):
-            print("Unexpected response format for table names:", raw_output)
+        supabase_url = os.environ.get("SUPABASE_URL")
+        supabase_key = os.environ.get("SUPABASE_KEY")
+        
+        if not supabase_url or not supabase_key:
+            print("Error: Missing Supabase credentials in environment variables")
             return None
-
-        return data
-
-    except subprocess.CalledProcessError as e:
-        print("Error running the JavaScript file:", e)
-        print("Stderr:", e.stderr)
+            
+        # Initialize Supabase client
+        supabase = create_client(supabase_url, supabase_key)
+        
+        # Fetch table names using system schema query
+        response = supabase.rpc('get_tables').execute()
+        
+        if hasattr(response, 'error') and response.error:
+            print(f"Error fetching tables from Supabase: {response.error}")
+            return None
+            
+        return response.data
+        
+    except Exception as e:
+        print(f"Error connecting to Supabase: {e}")
         return None
-    except json.JSONDecodeError as e:
-        print("Error parsing JSON:", e)
-        print("Raw JSON Response:", result.stdout)
-        return None
-
-
 
 def fetch_table_data(table_name):
+    """
+    Fetch data from a specific table using the Python Supabase client.
+    Replaces the Node.js subprocess approach.
+    """
     try:
         if not isinstance(table_name, str):
             print("Error: table_name must be a string.")
             return None
 
-        result = subprocess.run(
-            ['node', os.path.join(os.getcwd(), 'fetchAllData.js'), table_name.strip()],  
-            capture_output=True,
-            text=True,
-            check=True
-        )
-
-        raw_output = result.stdout.strip()
-
-        if not raw_output:
-            print(f"Error: JavaScript returned empty response for {table_name}.")
-            return None
+        supabase_url = os.environ.get("SUPABASE_URL")
+        supabase_key = os.environ.get("SUPABASE_KEY")
         
-        return json.loads(raw_output)
-
-    except subprocess.CalledProcessError as e:
-        print(f"Error running JavaScript file: {e}")
-        print(f"Stderr: {e.stderr}")
-        return None
-    except json.JSONDecodeError as e:
-        print("Error parsing JSON:", e)
-        print("Raw JSON Response:", raw_output)
+        if not supabase_url or not supabase_key:
+            print("Error: Missing Supabase credentials in environment variables")
+            return None
+            
+        # Initialize Supabase client
+        supabase = create_client(supabase_url, supabase_key)
+        
+        # Fetch data from the specified table
+        response = supabase.table(table_name.strip()).select('*').execute()
+        
+        if hasattr(response, 'error') and response.error:
+            print(f"Error fetching data from table {table_name}: {response.error}")
+            return None
+            
+        return {table_name: response.data}
+        
+    except Exception as e:
+        print(f"Error fetching table data: {e}")
         return None

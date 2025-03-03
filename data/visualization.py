@@ -11,6 +11,8 @@ def plot_financial_briefing(output_data):
     """
     Plots financial ratios and major financial statistics from balance sheet data
     and returns the plot as a base64-encoded string for use in web applications.
+    
+    This function creates a new plot each time it's called, preventing caching issues.
 
     Parameters:
     - output_data: List of dictionaries containing balance sheet data and ratios.
@@ -22,6 +24,8 @@ def plot_financial_briefing(output_data):
         - 'net_income'
         - 'ratios': Dictionary containing financial ratios
     """
+    plt.close('all')
+    
     # Extract data for plotting
     dates = [datetime.fromisoformat(item['date']) for item in output_data]
     total_assets = [item['total_asset'] for item in output_data]
@@ -93,6 +97,7 @@ def plot_financial_briefing(output_data):
     fig.autofmt_xdate(rotation=45)  
     plt.tight_layout()
 
+    # At the end, ensure proper cleanup
     buffer = io.BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)

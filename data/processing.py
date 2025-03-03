@@ -6,46 +6,34 @@ def balance_briefing(data_accounting_balance_sheets, output_file=None):
         date = balance_sheet.get("date")
         report_json = balance_sheet.get("report_json")
 
-        assets = report_json.get("assets")[0]
-        assets_subitems = assets.get("sub_items", [])
-        asset_sub = [
-            {"name": asset_item.get("name"), "value": asset_item.get("value")}
-            for asset_item in assets_subitems
-        ]
+        assets = report_json.get("assets", [{}])[0]
+        liabilities = report_json.get("liabilities", [{}])[0]
+        equity = report_json.get("equity", [{}])[0]
 
-        liabilities = report_json.get("liabilities")[0]
-        liabilities_subitems = liabilities.get("sub_items", [])
-        liability_sub = [
-            {"name": liability_item.get("name"), "value": liability_item.get("value")}
-            for liability_item in liabilities_subitems
-        ]
-
-        equity = report_json.get("equity")[0]
-        equity_subitems = equity.get("sub_items", [])
-        equity_sub = [
-            {"name": equity_item.get("name"), "value": equity_item.get("value")}
-            for equity_item in equity_subitems
-        ]
-
-        net_income = next(
-            (equity_item.get("value") for equity_item in equity_subitems if equity_item.get("name") == "Net Income"),
-            None
-        )
+        asset_sub = [{"name": item.get("name"), "value": item.get("value")} 
+                     for item in assets.get("sub_items", [])]
+        liability_sub = [{"name": item.get("name"), "value": item.get("value")} 
+                         for item in liabilities.get("sub_items", [])]
+        equity_sub = [{"name": item.get("name"), "value": item.get("value")} 
+                      for item in equity.get("sub_items", [])]
 
         total_assets = assets.get("value") or 1
         total_liabilities = liabilities.get("value") or 1
         total_equity = equity.get("value") or 1
-        net_income = net_income or 0
 
-        #Calculations
-        current_ratio = total_assets / total_liabilities
-        debt_to_equity_ratio = total_liabilities / total_equity
-        return_on_equity = net_income / total_equity
-        equity_multiplier = total_assets / total_equity
-        debt_ratio = total_liabilities / total_assets
-        net_profit_margin = net_income / total_assets
+        net_income = next((item.get("value") for item in equity.get("sub_items", []) 
+                          if item.get("name") == "Net Income"), 0)
 
-        balance_sheet_output = {
+        ratios = {
+            "current_ratio": total_assets / total_liabilities,
+            "debt_to_equity_ratio": total_liabilities / total_equity,
+            "return_on_equity": net_income / total_equity,
+            "equity_multiplier": total_assets / total_equity,
+            "debt_ratio": total_liabilities / total_assets,
+            "net_profit_margin": net_income / total_assets
+        }
+
+        output_data.append({
             "date": date,
             "total_asset": total_assets,
             "asset_breakdown": asset_sub,
@@ -54,17 +42,8 @@ def balance_briefing(data_accounting_balance_sheets, output_file=None):
             "total_equity": total_equity,
             "equity_breakdown": equity_sub,
             "net_income": net_income,
-            "ratios": {
-                "current_ratio": current_ratio,
-                "debt_to_equity_ratio": debt_to_equity_ratio,
-                "return_on_equity": return_on_equity,
-                "equity_multiplier": equity_multiplier,
-                "debt_ratio": debt_ratio,
-                "net_profit_margin": net_profit_margin,
-            },
-        }
-
-        output_data.append(balance_sheet_output)
+            "ratios": ratios
+        })
 
     if output_file:
         import json

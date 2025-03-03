@@ -6,6 +6,92 @@
     <title>Financial Analysis Tool</title>
     <link rel="stylesheet" href="./static/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Custom dropdown styling */
+        .custom-dropdown {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .dropdown-header {
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dropdown-header:after {
+            content: "▼";
+            font-size: 12px;
+        }
+        
+        .dropdown-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-top: none;
+            border-radius: 0 0 0.25rem 0.25rem;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .dropdown-option {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dropdown-option:hover {
+            background-color: #f1f3f5;
+        }
+        
+        .dropdown-open .dropdown-options {
+            display: block;
+        }
+        
+        /* Badge styling */
+        .time-period-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            margin-left: 0.5rem;
+            border-radius: 0.25rem;
+            min-width: 3rem;
+            text-align: center;
+        }
+        
+        .current-year {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .previous-year {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .older {
+            background-color: #adb5bd;
+            color: white;
+        }
+        
+        /* Hidden actual select for form submission */
+        .hidden-select {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -13,14 +99,32 @@
     </header>
     <main>
         <form method="POST" class="form-container">
-            <label for="target_date">Enter Target Date (YYYY-MM-DD):</label>
-            <input type="date" id="target_date" name="target_date" required>
-            
-            <label for="model_selection">Select Model:</label>
-            <select id="model_selection" name="model_selection">
-                <option value="GPT 4o">GPT 4o</option>
-                <option value="deepseek-r1">deepseek-r1</option>
-            </select>
+            <div class="mb-3">
+                <label for="visible-dropdown">Select Report Date:</label>
+                <div class="custom-dropdown">
+                    <div id="dropdown-header" class="dropdown-header">-- Select a report date --</div>
+                    <div class="dropdown-options" id="dropdown-options">
+                        {% if available_dates %}
+                            {% for date in available_dates %}
+                                <div class="dropdown-option" data-value="{{ date }}">
+                                    <span class="date-display" data-date="{{ date }}">{{ date.split('T')[0] }}</span>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Hidden actual select that will be updated and submitted with the form -->
+                <select id="target_date" name="target_date" class="hidden-select" required>
+                    <option value="">-- Select a report date --</option>
+                    {% if available_dates %}
+                        {% for date in available_dates %}
+                            <option value="{{ date }}" {% if target_date == date %}selected{% endif %}>
+                                {{ date.split('T')[0] }}
+                            </option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
             
             <button type="submit">Get Financial Summary</button>
         </form>
@@ -62,5 +166,86 @@
             </div>        
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownHeader = document.getElementById('dropdown-header');
+            const dropdownOptions = document.getElementById('dropdown-options');
+            const dropdownContainer = dropdownHeader.parentElement;
+            const hiddenSelect = document.getElementById('target_date');
+            
+            // Set up the dropdown toggle
+            dropdownHeader.addEventListener('click', function() {
+                dropdownContainer.classList.toggle('dropdown-open');
+            });
+            
+            // Close dropdown when clicking elsewhere
+            document.addEventListener('click', function(event) {
+                if (!dropdownContainer.contains(event.target)) {
+                    dropdownContainer.classList.remove('dropdown-open');
+                }
+            });
+            
+            // Format the date options
+            const dateOptions = document.querySelectorAll('.date-display');
+            const currentYear = new Date().getFullYear();
+            
+            dateOptions.forEach(dateOption => {
+                const dateValue = dateOption.getAttribute('data-date');
+                const date = new Date(dateValue);
+                const year = date.getFullYear();
+                
+                // Format the month and day portion only
+                const month = date.toLocaleString('en-US', { month: 'short' });
+                const day = date.getDate();
+                const formattedDate = `${month} ${day}`;
+                
+                let badgeClass = '';
+                if (year === currentYear) {
+                    badgeClass = 'current-year';
+                } else if (year === currentYear - 1) {
+                    badgeClass = 'previous-year';
+                } else {
+                    badgeClass = 'older';
+                }
+                
+                // Create the badge with explicit spacing
+                const badge = `<span class="time-period-badge ${badgeClass}">${year}</span>`;
+                
+                // Replace the text with formatted date + badge
+                dateOption.innerHTML = `${formattedDate} ${badge}`;
+            });
+            
+            // Handle option selection
+            const options = document.querySelectorAll('.dropdown-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const displayText = this.textContent.trim();
+                    
+                    // Update the dropdown header
+                    dropdownHeader.innerHTML = displayText;
+                    
+                    // Update the hidden select
+                    hiddenSelect.value = value;
+                    
+                    // Close the dropdown
+                    dropdownContainer.classList.remove('dropdown-open');
+                    
+                    // Trigger change event on the select
+                    const event = new Event('change', { bubbles: true });
+                    hiddenSelect.dispatchEvent(event);
+                });
+            });
+            
+            // Initialize with selected value if one exists
+            if (hiddenSelect.value) {
+                const selectedOption = document.querySelector(`.dropdown-option[data-value="${hiddenSelect.value}"]`);
+                if (selectedOption) {
+                    dropdownHeader.innerHTML = selectedOption.textContent.trim();
+                }
+            }
+        });
+    </script>
 </body>
 </html>
