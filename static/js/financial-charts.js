@@ -19,6 +19,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Store chart instances
     const chartInstances = {};
     
+    // Find the selected date index to highlight the data point
+    let selectedDateIndex = -1;
+    if (selectedDate) {
+        const selectedDateObj = new Date(selectedDate);
+        selectedDateIndex = dates.findIndex(date => 
+            date.getFullYear() === selectedDateObj.getFullYear() && 
+            date.getMonth() === selectedDateObj.getMonth() && 
+            date.getDate() === selectedDateObj.getDate()
+        );
+    }
+    
     // Chart configuration options
     const commonOptions = {
         responsive: true,
@@ -63,7 +74,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         // Add a light blue background to the chart area
-        backgroundColor: '#f0f8ff'
+        backgroundColor: '#f0f8ff',
+        // Add point hover styling
+        elements: {
+            point: {
+                radius: (context) => {
+                    // Return larger radius for the selected date point
+                    const index = context.dataIndex;
+                    return index === selectedDateIndex ? 8 : 3;
+                },
+                hoverRadius: 7,
+                backgroundColor: (context) => {
+                    // Highlight the selected date point
+                    const index = context.dataIndex;
+                    return index === selectedDateIndex ? '#FF5733' : context.dataset.borderColor;
+                },
+                borderWidth: (context) => {
+                    // Add border to the selected date point
+                    const index = context.dataIndex;
+                    return index === selectedDateIndex ? 2 : 1;
+                },
+                borderColor: (context) => {
+                    // White border on the selected point for contrast
+                    const index = context.dataIndex;
+                    return index === selectedDateIndex ? 'white' : context.dataset.borderColor;
+                }
+            }
+        }
     };
     
     // Function to create major financial stats chart
@@ -81,25 +118,37 @@ document.addEventListener('DOMContentLoaded', function() {
                         label: 'Total Assets',
                         data: totalAssets,
                         borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
+                        tension: 0.1,
+                        pointRadius: (ctx) => ctx.dataIndex === selectedDateIndex ? 8 : 3,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: (ctx) => ctx.dataIndex === selectedDateIndex ? '#FF5733' : 'rgb(75, 192, 192)'
                     },
                     {
                         label: 'Total Liabilities',
                         data: totalLiabilities,
                         borderColor: 'rgb(255, 99, 132)',
-                        tension: 0.1
+                        tension: 0.1,
+                        pointRadius: (ctx) => ctx.dataIndex === selectedDateIndex ? 8 : 3,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: (ctx) => ctx.dataIndex === selectedDateIndex ? '#FF5733' : 'rgb(255, 99, 132)'
                     },
                     {
                         label: 'Total Equity',
                         data: totalEquities,
                         borderColor: 'rgb(153, 102, 255)',
-                        tension: 0.1
+                        tension: 0.1,
+                        pointRadius: (ctx) => ctx.dataIndex === selectedDateIndex ? 8 : 3,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: (ctx) => ctx.dataIndex === selectedDateIndex ? '#FF5733' : 'rgb(153, 102, 255)'
                     },
                     {
                         label: 'Net Income',
                         data: netIncomes,
                         borderColor: 'rgb(255, 159, 64)',
-                        tension: 0.1
+                        tension: 0.1,
+                        pointRadius: (ctx) => ctx.dataIndex === selectedDateIndex ? 8 : 3,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: (ctx) => ctx.dataIndex === selectedDateIndex ? '#FF5733' : 'rgb(255, 159, 64)'
                     }
                 ]
             },
@@ -144,9 +193,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     label: title,
                     data: data,
                     borderColor: color,
-                    backgroundColor: backgroundColor,  // Proper semi-transparent background
+                    backgroundColor: backgroundColor,
                     fill: true,
-                    tension: 0.1
+                    tension: 0.1,
+                    pointRadius: (ctx) => ctx.dataIndex === selectedDateIndex ? 8 : 3,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: (ctx) => ctx.dataIndex === selectedDateIndex ? '#FF5733' : color
                 }]
             },
             options: {

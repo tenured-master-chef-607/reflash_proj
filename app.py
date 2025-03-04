@@ -7,8 +7,6 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-company_name = "Sentient Academy"
-
 # Cache for balance sheets data
 _balance_sheets_cache = {
     "data": None,

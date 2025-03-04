@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Analysis Tool</title>
+    <title>Reflash ⚡ Financial Analysis</title>
     <link rel="stylesheet" href="./static/css/styles.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/chart-styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -260,7 +260,7 @@
 </head>
 <body>
     <header>
-        <h1>Financial Analysis Tool</h1>
+        <h1>Reflash ⚡ Financial Analysis</h1>
     </header>
     
     <div class="main-content">
@@ -351,6 +351,8 @@
                     <script>
                         // Financial data passed from Flask
                         const financialData = {{ balance_sheets|tojson }};
+                        // Pass the selected date to JavaScript
+                        const selectedDate = {{ target_date|tojson if target_date else 'null' }};
                     </script>
                     <script src="{{ url_for('static', filename='js/financial-charts.js') }}"></script>
                 {% else %}
