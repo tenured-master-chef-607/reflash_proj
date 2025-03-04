@@ -232,6 +232,30 @@
         .hidden-select {
             display: none;
         }
+        
+        /* Add to existing styles */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .loading:after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 40px;
+            margin: 20px auto;
+            border-radius: 50%;
+            border: 4px solid #ddd;
+            border-top-color: #007BFF;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -341,6 +365,43 @@
                     <script>
                         const markdownContent = `{{ summary|e }}`; 
                         document.getElementById('llm-analysis').innerHTML = marked.parse(markdownContent);
+                        
+                        // Add async request for AI analysis if we're on a report page
+                        {% if target_date %}
+                        (async function loadAnalysis() {
+                            try {
+                                // Show loading state
+                                document.getElementById('llm-analysis').innerHTML = '<div class="loading">Loading AI analysis...</div>';
+                                
+                                // Make API request
+                                const response = await fetch('/api/analysis', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        target_date: '{{ target_date }}'
+                                    })
+                                });
+                                
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                
+                                const data = await response.json();
+                                
+                                // Update the content with the AI analysis
+                                if (data.summary) {
+                                    document.getElementById('llm-analysis').innerHTML = marked.parse(data.summary);
+                                } else {
+                                    document.getElementById('llm-analysis').innerHTML = '<p>No analysis available.</p>';
+                                }
+                            } catch (error) {
+                                console.error('Error fetching analysis:', error);
+                                document.getElementById('llm-analysis').innerHTML = '<p>Error loading analysis. Please try again.</p>';
+                            }
+                        })();
+                        {% endif %}
                     </script>
                 {% else %}
                     <p>No analysis available. Please enter a date to generate a report.</p>

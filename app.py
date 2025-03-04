@@ -1,7 +1,6 @@
 from flask import Flask, request, render_template, jsonify
 from data.fetch_data import fetch_data_from_supabase
 from data.processing import balance_briefing, financial_summary
-from data.visualization import plot_financial_briefing
 from data.markdown_generation import generate_markdown
 import importlib
 from datetime import datetime, timedelta
@@ -77,19 +76,9 @@ def home():
             # Plot generation removed
             # plot = get_plot(balance_sheets)
             
-            prompt = f"""Financial data and calculated ratios:{summary_data}. Using the provided balance sheet data for the specified date, {target_date}, generate a concise financial analysis report evaluating the company's financial health. The report should be structured into the following six sections: 
-            1. Financial Summary: Provide an overview of the key financial figures, including total assets, liabilities, equity, and net income, highlighting any significant observations.
-            2. Breakdown of Financial Components: Analyze and describe the composition of assets, liabilities, and equity, noting any dominant or missing components.
-            3. Key Financial Ratios Interpretation: Evaluate the company's financial health by interpreting relevant ratios (e.g., current ratio, debt-to-equity ratio, return on equity, equity multiplier, debt ratio, and net profit margin) in the context of standard benchmarks.
-            4. Key Findings: Highlight the most critical takeaways from the data, such as liquidity, solvency, profitability, or significant trends.
-            5. Key Insights: Summarize actionable insights that can be drawn from the analysis, focusing on areas of strength, risks, or opportunities.
-            6. Recommendations: Provide practical recommendations for improving financial performance, mitigating risks, or leveraging opportunities.
-            Ensure that the analysis is clear, precise, and easy to understand, using the data provided to support conclusions where applicable."""
-            
-            gpt_agent = importlib.import_module("agents.gpt_agent")
-            # summary = gpt_agent.call_gpt_agent(prompt)
-            summary = "temp summary"
-    
+            # We'll no longer create the summary here - it will be loaded async
+            summary = "Loading analysis..."
+
     return render_template('template.html', 
                           summary=summary, 
                           stats=stats, 
@@ -103,6 +92,32 @@ def home():
 def get_balance_sheets_api():
     balance_sheets = get_balance_sheets()
     return jsonify(balance_sheets)
+
+# Add a new endpoint for async AI analysis
+@app.route('/api/analysis', methods=['POST'])
+def get_analysis():
+    data = request.json
+    target_date = data.get('target_date')
+    
+    if not target_date:
+        return jsonify({"error": "No target date provided"}), 400
+    
+    balance_sheets = get_balance_sheets()
+    summary_data = financial_summary(balance_sheets, target_date)
+    
+    prompt = f"""Financial data and calculated ratios:{summary_data}. Using the provided balance sheet data for the specified date, {target_date}, generate a concise financial analysis report evaluating the company's financial health. The report should be structured into the following six sections: 
+    1. Financial Summary: Provide an overview of the key financial figures, including total assets, liabilities, equity, and net income, highlighting any significant observations.
+    2. Breakdown of Financial Components: Analyze and describe the composition of assets, liabilities, and equity, noting any dominant or missing components.
+    3. Key Financial Ratios Interpretation: Evaluate the company's financial health by interpreting relevant ratios (e.g., current ratio, debt-to-equity ratio, return on equity, equity multiplier, debt ratio, and net profit margin) in the context of standard benchmarks.
+    4. Key Findings: Highlight the most critical takeaways from the data, such as liquidity, solvency, profitability, or significant trends.
+    5. Key Insights: Summarize actionable insights that can be drawn from the analysis, focusing on areas of strength, risks, or opportunities.
+    6. Recommendations: Provide practical recommendations for improving financial performance, mitigating risks, or leveraging opportunities.
+    Ensure that the analysis is clear, precise, and easy to understand, using the data provided to support conclusions where applicable."""
+    
+    gpt_agent = importlib.import_module("agents.gpt_agent")
+    summary = gpt_agent.call_gpt_agent(prompt)
+    
+    return jsonify({"summary": summary})
 
 if __name__ == "__main__":
     app.run(debug=True)
