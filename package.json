@@ -1,0 +1,13 @@
+{
+  "name": "reflash",
+  "version": "1.0.0",
+  "main": "supabaseClient.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module"
+}

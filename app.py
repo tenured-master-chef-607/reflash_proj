@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, jsonify
 from data.fetch_data import fetch_data_from_supabase
 from data.processing import balance_briefing, financial_summary
 from data.markdown_generation import generate_markdown
+from data.chatbot import generate_response, load_data, get_relevant_tables
 import importlib
 from datetime import datetime, timedelta
 
@@ -116,6 +117,14 @@ def get_analysis():
     summary = gpt_agent.call_gpt_agent(prompt)
     
     return jsonify({"summary": summary})
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    data = load_data()  # Load your data
+    user_query = request.json.get('query')
+    relevant_tables = get_relevant_tables(data, user_query)
+    response = generate_response(data, relevant_tables, user_query)
+    return jsonify({'response': response})
 
 if __name__ == "__main__":
     app.run(debug=True)
